@@ -860,9 +860,10 @@ function confirmSubmit() {
   questoes.forEach((q, idx) => {
     const fieldKey = `q${q.numero}`;
     const fieldId  = cfg.fields[fieldKey];
-    const resposta = respostas[q.numero] 
-  ? q.opcoes.find(o => o.letra === respostas[q.numero]).texto
+    const resposta = respostas[q.numero]
+  ? `(${respostas[q.numero].toUpperCase()})`
   : 'Não respondida';
+
     if (fieldId) params.append(fieldId, resposta);
   });
 
