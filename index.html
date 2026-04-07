@@ -868,16 +868,23 @@ function confirmSubmit() {
   });
 
   // Envio via fetch (CORS sem-cookie — padrão do Google Forms)
-  fetch(cfg.formUrl, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString()
-  }).catch(() => {
-    // Google Forms em modo no-cors sempre retorna opaque response;
-    // o erro aqui normalmente é apenas network — pode ignorar em dev.
-    console.warn('Resposta opaca do Google Forms (esperado em no-cors).');
-  });
+  const form = document.createElement("form");
+form.method = "POST";
+form.action = cfg.formUrl;
+
+// opcional: evita sair da página
+form.target = "hidden_iframe";
+
+params.forEach((value, key) => {
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = key;
+  input.value = value;
+  form.appendChild(input);
+});
+
+document.body.appendChild(form);
+form.submit();
 
   // Mostrar tela de sucesso
   showSuccess(nome, email);
