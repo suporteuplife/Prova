@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Avaliação</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    color: #fff;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  }
+
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .header-icon {
+    width: 48px;
+    height: 48px;
+    background: #e94560;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .header-text p {
+    font-size: 13px;
+    color: #a0aec0;
+    margin-top: 2px;
+  }
+
+  .timer-bar {
+    background: #16213e;
+    border-bottom: 1px solid #0f3460;
+  }
+
+  .timer-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #a0aec0;
+  }
+
+  #timer-display {
+    font-weight: 700;
+    font-size: 16px;
+    color: #e2e8f0;
+    letter-spacing: 2px;
+  }
+
+  #timer-display.warning { color: #f6ad55; }
+  #timer-display.danger { color: #fc8181; animation: blink 1s infinite; }
+
+  @keyframes blink { 50% { opacity: 0.5; } }
+
+  .progress-bar-wrap {
+    background: #0f3460;
+    height: 4px;
+    border-radius: 2px;
+    flex: 1;
+    margin: 0 16px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e94560, #f6ad55);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  main {
+    max-width: 900px;
+    margin: 32px auto;
+    padding: 0 16px 80px;
+  }
+
+  .section-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #e94560;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 16px;
+    background: #e94560;
+    border-radius: 2px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a5568;
+  }
+
+  input[type="text"],
+  input[type="email"] {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 15px;
+    color: #1a202c;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    background: #f7fafc;
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus {
+    border-color: #e94560;
+    box-shadow: 0 0 0 3px rgba(233,69,96,0.12);
+    background: #fff;
+  }
+
+  input.error { border-color: #fc8181 !important; }
+
+  .question-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    padding: 28px;
+    margin-bottom: 20px;
+    border-left: 4px solid #e2e8f0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .question-card.answered { border-left-color: #68d391; }
+  .question-card.unanswered-highlight { border-left-color: #fc8181; box-shadow: 0 0 0 2px rgba(252,129,129,0.2); }
+
+  .question-number {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #a0aec0;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .q-badge {
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .q-badge.answered-badge { background: #38a169; }
+
+  .question-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #2d3748;
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .option-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #4a5568;
+    transition: all 0.15s;
+    line-height: 1.5;
+    background: #f7fafc;
+  }
+
+  .option-label:hover {
+    border-color: #e94560;
+    background: #fff5f7;
+    color: #c53030;
+  }
+
+  .option-label input[type="radio"] { display: none; }
+
+  .radio-circle {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e0;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .option-label.selected {
+    border-color: #e94560;
+    background: #fff5f7;
+    color: #c53030;
+    font-weight: 600;
+  }
+
+  .option-label.selected .radio-circle {
+    border-color: #e94560;
+    background: #e94560;
+  }
+
+  .option-label.selected .radio-circle::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+  }
+
+  .nav-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .nav-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    background: #f7fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #718096;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-dot:hover { border-color: #e94560; color: #e94560; }
+  .nav-dot.done { background: #38a169; border-color: #38a169; color: #fff; }
+  .nav-dot.pending { background: #f7fafc; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .legend-dot.done { background: #38a169; }
+  .legend-dot.pending { background: #e2e8f0; border: 1px solid #cbd5e0; }
+
+  footer-actions {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #e2e8f0;
+    padding: 16px;
+    z-index: 99;
+  }
+
+  .footer-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .footer-info { font-size: 13px; color: #718096; }
+  .footer-info strong { color: #2d3748; }
+
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: #e94560;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(233,69,96,0.35);
+  }
+
+  .btn-primary:hover { background: #c53030; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 20px;
+    padding: 36px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+    animation: popIn 0.25s ease;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+  }
+
+  .modal-icon.warn { background: #fef3c7; }
+  .modal-icon.success { background: #c6f6d5; }
+
+  .modal h2 { font-size: 22px; font-weight: 700; color: #1a202c; margin-bottom: 10px; }
+  .modal p { font-size: 14px; color: #718096; line-height: 1.6; margin-bottom: 24px; }
+
+  .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+
+  .btn-outline {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1.5px solid #e2e8f0;
+    background: transparent;
+    color: #4a5568;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-outline:hover { border-color: #cbd5e0; background: #f7fafc; }
+
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 32px;
+  }
+
+  .success-screen.active { display: block; }
+  .exam-form.hidden { display: none; }
+
+  #unanswered-warning {
+    display: none;
+    background: #fff5f5;
+    border: 1.5px solid #fc8181;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #c53030;
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-icon">📋</div>
+    <div class="header-text">
+      <h1>Sistema de Avaliação</h1>
+      <p>Responda todas as questões com atenção. Boa sorte!</p>
+    </div>
+  </div>
+  <div class="timer-bar">
+    <div class="timer-inner">
+      <span>⏱ Tempo restante:</span>
+      <span id="timer-display">60:00</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="timer-bar" style="width:100%"></div>
+      </div>
+      <span id="answered-count">0/10 respondidas</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Success Screen -->
+  <div class="success-screen section-card" id="success-screen">
+    <div style="font-size:60px;margin-bottom:16px;">✅</div>
+    <h2 style="font-size:26px;font-weight:700;color:#1a202c;margin-bottom:10px;">Prova Enviada!</h2>
+    <p style="font-size:15px;color:#718096;max-width:420px;margin:0 auto 24px;">Suas respostas foram registradas com sucesso. Você pode fechar esta página.</p>
+    <div id="submitted-info" style="font-size:14px;color:#4a5568;background:#f7fafc;border-radius:10px;padding:16px;max-width:380px;margin:0 auto;"></div>
+  </div>
+
+  <!-- Exam Form -->
+  <div class="exam-form" id="exam-form">
+
+    <!-- Identificação -->
+    <div class="section-card">
+      <div class="section-title">Identificação do Candidato</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nome">Nome completo *</label>
+          <input type="text" id="nome" placeholder="Digite seu nome completo" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="email">E-mail *</label>
+          <input type="email" id="email" placeholder="seuemail@exemplo.com" autocomplete="email">
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegação rápida -->
+    <div class="section-card" style="padding:24px 28px;">
+      <div class="section-title">Navegação rápida</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot done"></div> Respondida</div>
+        <div class="legend-item"><div class="legend-dot pending"></div> Pendente</div>
+      </div>
+      <div class="nav-dots" id="nav-dots"></div>
+    </div>
+
+    <!-- Warning -->
+    <div id="unanswered-warning">
+      ⚠️ <strong>Atenção:</strong> Existem questões não respondidas. Role a página para verificar as questões destacadas em vermelho.
+    </div>
+
+    <!-- Questões -->
+    <div id="questions-container"></div>
+
+  </div>
+</main>
+
+<footer-actions>
+  <div class="footer-inner">
+    <div class="footer-info">
+      Respondidas: <strong id="footer-count">0</strong> de <strong>10</strong>
+    </div>
+    <button class="btn btn-primary" onclick="submitExam()">Enviar Prova →</button>
+  </div>
+</footer-actions>
+
+<!-- Modal de confirmação -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal">
+    <div class="modal-icon warn">⚠️</div>
+    <h2>Enviar prova?</h2>
+    <p id="modal-msg">Você respondeu todas as questões. Deseja confirmar o envio?</p>
+    <div class="modal-buttons">
+      <button class="btn-outline" onclick="closeModal()">Revisar</button>
+      <button class="btn btn-primary" onclick="confirmSubmit()">Confirmar Envio</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de tempo esgotado -->
+<div class="modal-overlay" id="modal-timeout">
+  <div class="modal">
+    <div class="modal-icon warn">⏰</div>
+    <h2>Tempo esgotado!</h2>
+    <p>O tempo da prova acabou. Suas respostas serão enviadas automaticamente.</p>
+    <div class="modal-buttons">
+      <button class="btn btn-primary" onclick="confirmSubmit()">Enviar agora</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// DADOS DAS QUESTÕES
+// =============================================
+const questoes = [
+  {
+    numero: 1,
+    enunciado: "Joaquim tem um grande conhecimento do setor que trabalha. Certo dia utilizou uma mensagem via e-mail para informar as atribuições de cada servidor na visita ao município de uma ilustre autoridade federal. O servidor responsável pelo recebimento da autoridade no aeroporto, ao receber a mensagem, encontrava-se com muita fadiga, o que o influenciou negativamente ao fazer a leitura. Com isso, não se lembrou de pegar a autoridade. Qual ruído interferiu na comunicação efetiva da mensagem?",
+    opcoes: [
+      { letra: "a", texto: "Ruído Psicológico." },
+      { letra: "b", texto: "Ruído Fisiológico." }
+    ]
+  },
+  {
+    numero: 2,
+    enunciado: "Em um sistema termodinâmico o caminho é definido pela sucessão de estados através dos quais o sistema passa, a ser chamado de processo. Definimos como exemplo de processo em volume constante:",
+    opcoes: [
+      { letra: "a", texto: "Processo Isocórico (isométrico)." },
+      { letra: "b", texto: "Processo Isobárico (Isoentálpico)." }
+    ]
+  },
+  {
+    numero: 3,
+    enunciado: "Na medida em que o fluido avança na direção do escoamento, os efeitos da viscosidade são percebidos pela aderência de uma camada de fluido sobre a parede do tubo, e há o surgimento de:",
+    opcoes: [
+      { letra: "a", texto: "Tensões de cisalhamento entre as camadas adjacentes." },
+      { letra: "b", texto: "Tensões de alheamento entre as camadas adjacentes." }
+    ]
+  },
+  {
+    numero: 4,
+    enunciado: "Processo pelo qual a energia é transferida de uma região de alta temperatura para outra de temperatura mais baixa dentro de um meio (sólido, líquido ou gasoso) ou entre meios diferentes em contato direto:",
+    opcoes: [
+      { letra: "a", texto: "Radiação." },
+      { letra: "b", texto: "Condução." }
+    ]
+  },
+  {
+    numero: 5,
+    enunciado: "A bomba centrífuga é constituída essencialmente de duas partes: uma parte móvel e uma parte estacionária. Os elementos que compõem a parte estacionária são:",
+    opcoes: [
+      { letra: "a", texto: "Caixa de gaxetas, mancais, suportes estruturais, adaptações para montagens." },
+      { letra: "b", texto: "Caixa de gaxetas, rotor, suportes estruturais, adaptações para montagens." }
+    ]
+  },
+  {
+    numero: 6,
+    enunciado: "Dois são os princípios conceptivos no qual se fundamentam todas as espécies de compressores de uso industrial: volumétrico (ou de deslocamento positivo) e dinâmico. Os compressores volumétricos são classificados em:",
+    opcoes: [
+      { letra: "a", texto: "Alternativos, que são rotativos compostos de axiais básicas e lóbulos." },
+      { letra: "b", texto: "Alternativos, que são rotativos compostos de palhetas, parafusos e lóbulos." }
+    ]
+  },
+  {
+    numero: 7,
+    enunciado: "Válvula que utiliza uma força auxiliar para operação e o acionamento é feito de acordo com os sinais provenientes dos controladores:",
+    opcoes: [
+      { letra: "a", texto: "Auto-regulador." },
+      { letra: "b", texto: "Controle." }
+    ]
+  },
+  {
+    numero: 8,
+    enunciado: "Os sistemas resfriados a água passam por três estágios para transferir o calor. Primeiro o calor é transferido do refrigerante, no condensado, para a água que circula no mesmo, depois a água é transferida de dentro do condensador para fora, através de uma tubulação e uma bomba, que a leva para a torre de resfriamento e por fim, a torre de resfriamento rejeita o calor da água para o ar externo. Podemos afirmar que:",
+    opcoes: [
+      { letra: "a", texto: "A temperatura do refrigerante no condensador fica aproximadamente 4°C menor." },
+      { letra: "b", texto: "A temperatura do refrigerante no condensador fica aproximadamente 8°C menor." }
+    ]
+  },
+  {
+    numero: 9,
+    enunciado: "A soldagem é considerada como o mais importante processo de união metálica, apresentando aplicações variadas, que vão desde fabricações simples até estruturas e componentes sofisticados. Ao se escolher adequadamente um processo de soldagem, deve-se considerar que:",
+    opcoes: [
+      { letra: "a", texto: "Os eletrodos revestidos não são responsáveis pela estabilização do arco elétrico na operação de soldagem." },
+      { letra: "b", texto: "Os eletrodos revestidos são responsáveis pela estabilização do arco elétrico, e a intensidade da corrente influencia diretamente a largura do cordão de solda nos processos com eletrodo revestido." }
+    ]
+  },
+  {
+    numero: 10,
+    enunciado: "Entre os componentes de uma caldeira, sua falta determina um risco grave e iminente, EXCETO:",
+    opcoes: [
+      { letra: "a", texto: "Ciclone." },
+      { letra: "b", texto: "Instrumento que indica a pressão do vapor." }
+    ]
+  }
+];
+
+// =============================================
+// MAPEAMENTO PARA O GOOGLE FORMS
+// Substitua as URLs e entry IDs abaixo pelos
+// da sua instância do Google Forms.
+// =============================================
+const GOOGLE_FORMS_CONFIG = {
+  // URL de envio do formulário (preflight URL do Google Forms)
+  // Exemplo: "https://docs.google.com/forms/d/e/SEU_FORM_ID/formResponse"
+  formUrl: "https://docs.google.com/forms/d/e/SEU_FORM_ID_AQUI/formResponse",
+
+  // IDs dos campos do Google Forms (entry.XXXXXXXXX)
+  fields: {
+    nome:  "entry.000000001",   // Campo Nome
+    email: "entry.000000002",   // Campo Email
+    q1:    "entry.000000003",   // Questão 1
+    q2:    "entry.000000004",   // Questão 2
+    q3:    "entry.000000005",   // Questão 3
+    q4:    "entry.000000006",   // Questão 4
+    q5:    "entry.000000007",   // Questão 5
+    q6:    "entry.000000008",   // Questão 6
+    q7:    "entry.000000009",   // Questão 7
+    q8:    "entry.000000010",   // Questão 8
+    q9:    "entry.000000011",   // Questão 9
+    q10:   "entry.000000012"    // Questão 10
+  }
+};
+
+// =============================================
+// ESTADO DA PROVA
+// =============================================
+const respostas = {};
+let timerInterval;
+const TEMPO_TOTAL = 60 * 60; // 60 minutos em segundos
+let tempoRestante = TEMPO_TOTAL;
+let enviado = false;
+
+// =============================================
+// RENDERIZAÇÃO DAS QUESTÕES
+// =============================================
+function renderQuestions() {
+  const container = document.getElementById('questions-container');
+  const navDots = document.getElementById('nav-dots');
+  container.innerHTML = '';
+  navDots.innerHTML = '';
+
+  questoes.forEach((q, idx) => {
+    // Dot de navegação
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot pending';
+    dot.id = `dot-${q.numero}`;
+    dot.textContent = q.numero;
+    dot.title = `Ir para questão ${q.numero}`;
+    dot.onclick = () => {
+      document.getElementById(`q-card-${q.numero}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    navDots.appendChild(dot);
+
+    // Card da questão
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `q-card-${q.numero}`;
+
+    let opcoesHtml = q.opcoes.map(op => `
+      <label class="option-label" id="opt-${q.numero}-${op.letra}" onclick="selectOption(${q.numero}, '${op.letra}', this)">
+        <input type="radio" name="q${q.numero}" value="${op.letra}">
+        <div class="radio-circle" id="radio-${q.numero}-${op.letra}"></div>
+        <span><strong>(${op.letra.toUpperCase()})</strong> ${op.texto}</span>
+      </label>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="question-number">
+        <span>Questão ${q.numero} de ${questoes.length}</span>
+        <span class="q-badge" id="badge-${q.numero}">Pendente</span>
+      </div>
+      <div class="question-text">${q.enunciado}</div>
+      <div class="options">${opcoesHtml}</div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function selectOption(qNum, letra, labelEl) {
+  // Deselecionar anteriores
+  questoes.find(q => q.numero === qNum).opcoes.forEach(op => {
+    const el = document.getElementById(`opt-${qNum}-${op.letra}`);
+    if (el) el.classList.remove('selected');
+  });
+
+  // Selecionar atual
+  labelEl.classList.add('selected');
+  respostas[qNum] = letra;
+
+  // Atualizar badge e card
+  const badge = document.getElementById(`badge-${qNum}`);
+  badge.textContent = 'Respondida';
+  badge.classList.add('answered-badge');
+
+  const card = document.getElementById(`q-card-${qNum}`);
+  card.classList.add('answered');
+  card.classList.remove('unanswered-highlight');
+
+  // Atualizar dot
+  const dot = document.getElementById(`dot-${qNum}`);
+  dot.classList.remove('pending');
+  dot.classList.add('done');
+
+  updateCounts();
+}
+
+function updateCounts() {
+  const total = Object.keys(respostas).length;
+  document.getElementById('answered-count').textContent = `${total}/${questoes.length} respondidas`;
+  document.getElementById('footer-count').textContent = total;
+}
+
+// =============================================
+// TIMER
+// =============================================
+function startTimer() {
+  timerInterval = setInterval(() => {
+    tempoRestante--;
+    const min = Math.floor(tempoRestante / 60);
+    const sec = tempoRestante % 60;
+    const display = document.getElementById('timer-display');
+    display.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+
+    const pct = (tempoRestante / TEMPO_TOTAL) * 100;
+    document.getElementById('timer-bar').style.width = pct + '%';
+
+    display.classList.remove('warning', 'danger');
+    if (tempoRestante <= 300 && tempoRestante > 60) display.classList.add('warning');
+    if (tempoRestante <= 60) display.classList.add('danger');
+
+    if (tempoRestante <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById('modal-timeout').classList.add('active');
+    }
+  }, 1000);
+}
+
+// =============================================
+// ENVIO
+// =============================================
+function submitExam() {
+  // Validar identificação
+  const nome = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  let valid = true;
+
+  document.getElementById('nome').classList.remove('error');
+  document.getElementById('email').classList.remove('error');
+
+  if (!nome) { document.getElementById('nome').classList.add('error'); valid = false; }
+  if (!email || !email.includes('@')) { document.getElementById('email').classList.add('error'); valid = false; }
+
+  if (!valid) {
+    document.getElementById('nome').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // Verificar não respondidas
+  const naoRespondidas = questoes.filter(q => !respostas[q.numero]);
+
+  if (naoRespondidas.length > 0) {
+    // Destacar não respondidas
+    naoRespondidas.forEach(q => {
+      const card = document.getElementById(`q-card-${q.numero}`);
+      card.classList.add('unanswered-highlight');
+    });
+    document.getElementById('unanswered-warning').style.display = 'block';
+    document.getElementById('modal-msg').innerHTML = `Você ainda tem <strong>${naoRespondidas.length} questão(ões) não respondida(s)</strong>. Deseja enviar mesmo assim?`;
+  } else {
+    document.getElementById('unanswered-warning').style.display = 'none';
+    document.getElementById('modal-msg').textContent = 'Você respondeu todas as questões. Deseja confirmar o envio?';
+  }
+
+  document.getElementById('modal-confirm').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-confirm').classList.remove('active');
+  // Scroll para a primeira não respondida
+  const naoRespondidas = questoes.filter(q => !respostas[q.numero]);
+  if (naoRespondidas.length > 0) {
+    document.getElementById(`q-card-${naoRespondidas[0].numero}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function confirmSubmit() {
+  if (enviado) return;
+  enviado = true;
+  clearInterval(timerInterval);
+
+  document.getElementById('modal-confirm').classList.remove('active');
+  document.getElementById('modal-timeout').classList.remove('active');
+
+  const nome  = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+
+  // =============================================
+  // ENVIO PARA O GOOGLE FORMS
+  // Construção dos parâmetros do formulário
+  // =============================================
+  const cfg = GOOGLE_FORMS_CONFIG;
+  const params = new URLSearchParams();
+  params.append(cfg.fields.nome,  nome);
+  params.append(cfg.fields.email, email);
+
+  questoes.forEach((q, idx) => {
+    const fieldKey = `q${q.numero}`;
+    const fieldId  = cfg.fields[fieldKey];
+    const resposta = respostas[q.numero] ? `(${respostas[q.numero].toUpperCase()}) ${q.opcoes.find(o => o.letra === respostas[q.numero]).texto}` : 'Não respondida';
+    if (fieldId) params.append(fieldId, resposta);
+  });
+
+  // Envio via fetch (CORS sem-cookie — padrão do Google Forms)
+  fetch(cfg.formUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  }).catch(() => {
+    // Google Forms em modo no-cors sempre retorna opaque response;
+    // o erro aqui normalmente é apenas network — pode ignorar em dev.
+    console.warn('Resposta opaca do Google Forms (esperado em no-cors).');
+  });
+
+  // Mostrar tela de sucesso
+  showSuccess(nome, email);
+}
+
+function showSuccess(nome, email) {
+  document.getElementById('exam-form').classList.add('hidden');
+
+  const respondidas = Object.keys(respostas).length;
+  document.getElementById('submitted-info').innerHTML = `
+    <strong>Candidato:</strong> ${nome}<br>
+    <strong>E-mail:</strong> ${email}<br>
+    <strong>Questões respondidas:</strong> ${respondidas} de ${questoes.length}
+  `;
+
+  document.getElementById('success-screen').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// =============================================
+// INIT
+// =============================================
+renderQuestions();
+startTimer();
+</script>
+</body>
+</html>
