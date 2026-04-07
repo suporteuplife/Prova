@@ -649,6 +649,22 @@ const questoes = [
 ];
 
 // =============================================
+// GABARITO (RESPOSTAS CORRETAS)
+// =============================================
+const gabarito = {
+  1: "b",
+  2: "a",
+  3: "a",
+  4: "b",
+  5: "a",
+  6: "b",
+  7: "b",
+  8: "b",
+  9: "b",
+  10: "a"
+};
+
+// =============================================
 // MAPEAMENTO PARA O GOOGLE FORMS
 // Substitua as URLs e entry IDs abaixo pelos
 // da sua instância do Google Forms.
@@ -886,18 +902,30 @@ params.forEach((value, key) => {
 document.body.appendChild(form);
 form.submit();
 
+// =============================================
+// CÁLCULO DA PONTUAÇÃO
+// =============================================
+let pontuacao = 0;
+
+questoes.forEach(q => {
+  if (respostas[q.numero] === gabarito[q.numero]) {
+    pontuacao++;
+  }
+});
+
   // Mostrar tela de sucesso
-  showSuccess(nome, email);
+  showSuccess(nome, email, pontuacao);
 }
 
-function showSuccess(nome, email) {
+function showSuccess(nome, email, pontuacao) {
   document.getElementById('exam-form').classList.add('hidden');
 
   const respondidas = Object.keys(respostas).length;
   document.getElementById('submitted-info').innerHTML = `
     <strong>Candidato:</strong> ${nome}<br>
     <strong>E-mail:</strong> ${email}<br>
-    <strong>Questões respondidas:</strong> ${respondidas} de ${questoes.length}
+    <strong>Questões respondidas:</strong> ${respondidas} de ${questoes.length}<br>
+    <strong>Pontuação:</strong> ${pontuacao} de ${questoes.length}
   `;
 
   document.getElementById('success-screen').classList.add('active');
